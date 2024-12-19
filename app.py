@@ -31,11 +31,19 @@ def validate_level(level):
     return "Incorrect Input"
 
 # Streamlit app
-st.title("NUNSA VOTERS REGISTRATION")
+st.set_page_config(page_title="NUNSA Voters Registration", page_icon="nunsa_logo.png")
 
-# Display the NUNSA logo
-image = Image.open("NUNSA.png")  # Replace with the path to your image
-st.image(image, caption='NUNSA', use_column_width=True)
+# Create a layout with two columns
+col1, col2 = st.columns([1, 4])
+
+with col1:
+    # Display the NUNSA logo
+    image = Image.open("nunsa_logo.png")  # Replace with the path to your image
+    st.image(image, caption='NUNSA', use_column_width=True, width=50)
+
+with col2:
+    # Title
+    st.title("NUNSA VOTERS REGISTRATION")
 
 # Read the CSV file from a GitHub repository
 csv_url = "NUNSA Election Form (Responses).csv"  # Replace with your GitHub URL
@@ -56,66 +64,65 @@ if 'Passkey' not in df.columns:
 attempts = 0
 max_attempts = 3
 
-while attempts < max_attempts:
-    # Prompt user for their details
-    first_name = st.text_input("Enter your First Name: ").strip().upper()
-    middle_name = st.text_input("Enter your Middle Name: ").strip().upper()
-    last_name = st.text_input("Enter your Last Name: ").strip().upper()
-    matric_number = st.text_input("Enter your Matric Number: ").strip()
-    email = st.text_input("Enter your Email Address: ").strip()
+# Use session state to keep track of attempts
+if 'attempts' not in st.session_state:
+    st.session_state.attempts = 0
 
-    # Validate user input
-    validation_error = validate_input(first_name, middle_name, last_name, matric_number, email)
-    if validation_error:
-        st.error(validation_error)
-        attempts += 1
-        continue
+# Prompt user for their details
+first_name = st.text_input("Enter your First Name: ").strip().upper()
+middle_name = st.text_input("Enter your Middle Name: ").strip().upper()
+last_name = st.text_input("Enter your Last Name: ").strip().upper()
+matric_number = st.text_input("Enter your Matric Number: ").strip()
+email = st.text_input("Enter your Email Address: ").strip()
 
+# Validate user input
+validation_error = validate_input(first_name, middle_name, last_name, matric_number, email)
+if validation_error:
+    st.error(validation_error)
+    st.session_state.attempts += 1
+else:
     # Prompt user for their level with an example format
     level = st.text_input("Enter your Level (e.g., 100L, 200L): ").strip()
     level_error = validate_level(level)
     if level_error:
         st.error(level_error)
-        attempts += 1
-        continue
-
-    # Check if the user exists in the dataset
-    existing_user = df[
-        (df['First_Name'] == first_name) &
-        (df['Middle_Name'] == middle_name) &
-        (df['Last_Name'] == last_name) &
-        (df['Matric_number'] == matric_number) &
-        (df['Email_address'] == email)
-    ]
-
-    if not existing_user.empty:
-        # User exists
-        passkey = existing_user.iloc[0]['Passkey']
-        if pd.notna(passkey):  # If a passkey exists
-            st.success(f"Hello {first_name}, you have already registered! Your passkey is: {passkey}.")
-        else:  # If no passkey exists (unlikely but handled here for completeness)
-            passkey = generate_password(matric_number, last_name)
-            df.loc[existing_user.index, 'Passkey'] = passkey
-            st.success(f"Hello {first_name}, your new passkey has been generated: {passkey}.")
-        break
+        st.session_state.attempts += 1
     else:
-        # User is not in the dataset, register them
-        passkey = generate_password(matric_number, last_name)
-        new_entry = {
-            'Timestamp': pd.Timestamp.now(),
-            'First_Name': first_name,
-            'Middle_Name': middle_name,
-            'Last_Name': last_name,
-            'Matric_number': matric_number,
-            'Email_address': email,
-            'Level': level,  # Add the provided level
-            'Passkey': passkey
-        }
-        df = pd.concat([df, pd.DataFrame([new_entry])], ignore_index=True)
-        st.success(f"Hello {first_name}, you have been registered, your passkey is: <span style='font-size:2em;'>{passkey}</span>.", unsafe_allow_html=True)
-        break
+        # Check if the user exists in the dataset
+        existing_user = df[
+            (df['First_Name'] == first_name) &
+            (df['Middle_Name'] == middle_name) &
+            (df['Last_Name'] == last_name) &
+            (df['Matric_number'] == matric_number) &
+            (df['Email_address'] == email)
+        ]
 
-if attempts == max_attempts:
+        if not existing_user.empty:
+            # User exists
+            passkey = existing_user.iloc[0]['Passkey']
+            if pd.notna(passkey):  # If a passkey exists
+                st.success(f"Hello {first_name}, you have already registered! Your passkey is: {passkey}.")
+            else:  # If no passkey exists (unlikely but handled here for completeness)
+                passkey = generate_password(matric_number, last_name)
+                df.loc[existing_user.index, 'Passkey'] = passkey
+                st.success(f"Hello {first_name}, your new passkey has been generated: {passkey}.")
+        else:
+            # User is not in the dataset, register them
+            passkey = generate_password(matric_number, last_name)
+            new_entry = {
+                'Timestamp': pd.Timestamp.now(),
+                'First_Name': first_name,
+                'Middle_Name': middle_name,
+                'Last_Name': last_name,
+                'Matric_number': matric_number,
+                'Email_address': email,
+                'Level': level,  # Add the provided level
+                'Passkey': passkey
+            }
+            df = pd.concat([df, pd.DataFrame([new_entry])], ignore_index=True)
+            st.success(f"Hello {first_name}, you have been registered, your passkey is: <span style='font-size:2em;'>{passkey}</span>.", unsafe_allow_html=True)
+
+if st.session_state.attempts == max_attempts:
     st.error("You have been blocked, please send a complaint to nunsacmul22@gmail.com")
 
 # Save the updated data back to the CSV
