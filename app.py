@@ -120,7 +120,7 @@ else:
                 'Passkey': passkey
             }
             df = pd.concat([df, pd.DataFrame([new_entry])], ignore_index=True)
-            st.success(f"Hello {first_name}, you have been registered, your passkey is: <span style='font-size:2em;'>{passkey}</span>.", unsafe_allow_html=True)
+            st.markdown(f"Hello {first_name}, you have been registered, your passkey is: <span style='font-size:2em;'>{passkey}</span>.", unsafe_allow_html=True)
 
 if st.session_state.attempts == max_attempts:
     st.error("You have been blocked, please send a complaint to nunsacmul22@gmail.com")
