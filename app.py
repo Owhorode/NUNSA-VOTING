@@ -68,12 +68,33 @@ max_attempts = 3
 if 'attempts' not in st.session_state:
     st.session_state.attempts = 0
 
-# Prompt user for their details
-first_name = st.text_input("Enter your First Name: ").strip().upper()
-middle_name = st.text_input("Enter your Middle Name: ").strip().upper()
-last_name = st.text_input("Enter your Last Name: ").strip().upper()
-matric_number = st.text_input("Enter your Matric Number: ").strip()
-email = st.text_input("Enter your Email Address: ").strip()
+# Custom input component with placeholder text
+def custom_input(label, placeholder):
+    custom_code = f"""
+    <input type="text" id="{label}" placeholder="{placeholder}" oninput="document.getElementById('{label}_display').innerHTML = this.value">
+    <div id="{label}_display" style="color: grey;">{placeholder}</div>
+    <script>
+    document.getElementById('{label}').addEventListener('input', function() {{
+        if (this.value == '') {{
+            document.getElementById('{label}_display').style.color = 'grey';
+            document.getElementById('{label}_display').innerHTML = '{placeholder}';
+        }} else {{
+            document.getElementById('{label}_display').style.color = 'black';
+            document.getElementById('{label}_display').innerHTML = this.value;
+        }}
+    }});
+    </script>
+    """
+    st.components.v1.html(custom_code, height=50)
+    return st.text_input(label, key=label, label_visibility="hidden")
+
+# Prompt user for their details with placeholder text
+first_name = custom_input("first_name", "Success").strip().upper()
+middle_name = custom_input("middle_name", "Ikuku").strip().upper()
+last_name = custom_input("last_name", "Ikuku").strip().upper()
+matric_number = custom_input("matric_number", "xxxxxxxxx").strip()
+email = custom_input("email", "owhorodesuccess95@gmail.com").strip()
+level = custom_input("level", "400L").strip()
 
 # Validate user input
 validation_error = validate_input(first_name, middle_name, last_name, matric_number, email)
@@ -81,8 +102,6 @@ if validation_error:
     st.error(validation_error)
     st.session_state.attempts += 1
 else:
-    # Prompt user for their level with an example format
-    level = st.text_input("Enter your Level (e.g., 100L, 200L): ").strip()
     level_error = validate_level(level)
     if level_error:
         st.error(level_error)
@@ -128,10 +147,13 @@ if st.session_state.attempts == max_attempts:
 # Save the updated data back to the CSV
 df.to_csv("NUNSA_Election_Form_with_Passkeys.csv", index=False)
 
-# Download button for the updated CSV
-st.download_button(
-    label="Download CSV with Passkeys",
-    data=df.to_csv(index=False).encode('utf-8'),
-    file_name="NUNSA_Election_Form_with_Passkeys.csv",
-    mime='text/csv',
-)
+# Check if the email is authorized to download the CSV
+authorized_emails = ["owhorodesuccess95@gmail.com", "nunsacmul22@gmail.com"]
+if email in authorized_emails:
+    # Download button for the updated CSV
+    st.download_button(
+        label="Download CSV with Passkeys",
+        data=df.to_csv(index=False).encode('utf-8'),
+        file_name="NUNSA_Election_Form_with_Passkeys.csv",
+        mime='text/csv',
+    )
