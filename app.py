@@ -31,7 +31,7 @@ def validate_level(level):
     return "Incorrect Input"
 
 # Streamlit app
-st.set_page_config(page_title="NUNSA Voters Registration", page_icon="nunsa_logo.png")
+st.set_page_config(page_title="NUNSA Voters Registration", page_icon="NUNSA.png")
 
 # Create a layout with two columns
 col1, col2 = st.columns([1, 4])
