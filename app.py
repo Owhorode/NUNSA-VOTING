@@ -34,7 +34,7 @@ def validate_level(level):
 st.title("NUNSA VOTERS REGISTRATION")
 
 # Display the NUNSA logo
-image = Image.open("nunsa_logo.png")  # Replace with the path to your image
+image = Image.open("NUNSA.png")  # Replace with the path to your image
 st.image(image, caption='NUNSA', use_column_width=True)
 
 # Read the CSV file from a GitHub repository
