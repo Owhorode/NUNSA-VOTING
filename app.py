@@ -39,7 +39,7 @@ col1, col2 = st.columns([1, 4])
 with col1:
     # Display the NUNSA logo
     image = Image.open("NUNSA.png")  # Replace with the path to your image
-    st.image(image, caption='NUNSA', use_column_width=True, width=50)
+    st.image(image, caption='NUNSA', use_container_width=False, width=100)
 
 with col2:
     # Title
