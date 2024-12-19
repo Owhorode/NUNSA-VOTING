@@ -1,14 +1,16 @@
 import streamlit as st
 import pandas as pd
-import random
+import hashlib
 import re
 from PIL import Image
 
-# Function to generate password
+# Function to generate a deterministic password
 def generate_password(matric_number, last_name):
     merge = str(matric_number) + last_name.lower()
-    password_length = min(12, len(merge))  # Ensure the password is not longer than 'merge'
-    password = "".join(random.sample(merge, password_length))
+    hash_object = hashlib.sha256(merge.encode())
+    hex_dig = hash_object.hexdigest()
+    password_length = min(12, len(hex_dig))  # Ensure the password is not longer than 'merge'
+    password = hex_dig[:password_length]
     return password
 
 # Function to validate user input
@@ -74,6 +76,7 @@ middle_name = st.text_input("Enter your Middle Name: ").strip().upper()
 last_name = st.text_input("Enter your Last Name: ").strip().upper()
 matric_number = st.text_input("Enter your Matric Number: ").strip()
 email = st.text_input("Enter your Email Address: ").strip()
+level = st.text_input("Enter your Level (e.g., 100L, 200L): ").strip()
 
 # Validate user input
 validation_error = validate_input(first_name, middle_name, last_name, matric_number, email)
@@ -81,8 +84,6 @@ if validation_error:
     st.error(validation_error)
     st.session_state.attempts += 1
 else:
-    # Prompt user for their level with an example format
-    level = st.text_input("Enter your Level (e.g., 100L, 200L): ").strip()
     level_error = validate_level(level)
     if level_error:
         st.error(level_error)
