@@ -57,13 +57,13 @@ first_name = st.text_input("Enter your First Name: ").strip().upper()
 middle_name = st.text_input("Enter your Middle Name: ").strip().upper()
 last_name = st.text_input("Enter your Last Name: ").strip().upper()
 matric_number = st.text_input("Enter your Matric Number: ").strip()
-email = st.text_input("Enter your Email Address: ").strip()
+email_registration = st.text_input("Enter your Email Address for Registration: ").strip()  # Unique label
 level = st.text_input("Enter your Level (e.g., 100L, 200L): ").strip()
 
 # Add a "SUBMIT" button to submit the form
 if st.button("SUBMIT"):
     # Use df.query to check if the user exists in the dataset
-    query_str = f"First_Name == '{first_name}' and Middle_Name == '{middle_name}' and Last_Name == '{last_name}' and Matric_number == '{matric_number}' and Email_address == '{email}' and Level == '{level}'"
+    query_str = f"First_Name == '{first_name}' and Middle_Name == '{middle_name}' and Last_Name == '{last_name}' and Matric_number == '{matric_number}' and Email_address == '{email_registration}' and Level == '{level}'"
     matching_user = df.query(query_str)
 
     if not matching_user.empty:
@@ -77,9 +77,9 @@ if st.button("SUBMIT"):
         st.error("No matching record found. Please verify your details and try again.")
 
 # Check if the email is authorized to download the CSV
+email_download = st.text_input("Enter your Email Address for CSV Download: ").strip()  # Unique label
 authorized_emails = ["owhorodesuccess95@gmail.com", "nunsacmul22@gmail.com"]
-email = st.text_input("Enter your Email Address: ").strip()
-if email in authorized_emails:
+if email_download in authorized_emails:
     # Download button for the updated CSV
     st.download_button(
         label="Download CSV with Passkeys",
