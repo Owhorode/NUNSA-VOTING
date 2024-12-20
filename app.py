@@ -48,7 +48,7 @@ with col2:
     # Title
     st.title("NUNSA VOTERS REGISTRATION")
 
-# Load the existing CSV file
+# Load the existing CSV file and generate passkeys for all existing users
 csv_file = "NUNSA Election Form (Responses).csv"
 if os.path.exists(csv_file):
     df = pd.read_csv(csv_file)
@@ -65,14 +65,6 @@ df['First_Name'] = df['First_Name'].str.upper()
 df['Middle_Name'] = df['Middle_Name'].str.upper()
 df['Last_Name'] = df['Last_Name'].str.upper()
 
-# Initialize the attempt counter
-attempts = 0
-max_attempts = 3
-
-# Use session state to keep track of attempts
-if 'attempts' not in st.session_state:
-    st.session_state.attempts = 0
-
 # Prompt user for their details
 first_name = st.text_input("Enter your First Name: ").strip().upper()
 middle_name = st.text_input("Enter your Middle Name: ").strip().upper()
@@ -81,17 +73,16 @@ matric_number = st.text_input("Enter your Matric Number: ").strip()
 email = st.text_input("Enter your Email Address: ").strip()
 level = st.text_input("Enter your Level (e.g., 100L, 200L): ").strip()
 
-# Validate user input only if the fields are not empty
-if first_name and middle_name and last_name and matric_number and email:
+# Add an "OK" button to submit the form
+if st.button("OK"):
+    # Validate user input
     validation_error = validate_input(first_name, middle_name, last_name, matric_number, email)
     if validation_error:
         st.error(validation_error)
-        st.session_state.attempts += 1
     else:
         level_error = validate_level(level)
         if level_error:
             st.error(level_error)
-            st.session_state.attempts += 1
         else:
             # Check if the user exists in the dataset
             existing_user = df[
@@ -99,7 +90,8 @@ if first_name and middle_name and last_name and matric_number and email:
                 (df['Middle_Name'] == middle_name) &
                 (df['Last_Name'] == last_name) &
                 (df['Matric_number'] == matric_number) &
-                (df['Email_address'] == email)
+                (df['Email_address'] == email) &
+                (df['Level'] == level)
             ]
 
             if not existing_user.empty:
@@ -121,9 +113,6 @@ if first_name and middle_name and last_name and matric_number and email:
                 }
                 df = pd.concat([df, pd.DataFrame([new_entry])], ignore_index=True)
                 st.markdown(f"Hello {first_name}, you have been registered, your passkey is: <span style='font-size:2em;'>{passkey}</span>.", unsafe_allow_html=True)
-
-if st.session_state.attempts == max_attempts:
-    st.error("You have been blocked, please send a complaint to nunsacmul22@gmail.com")
 
 # Save the updated data back to the CSV
 df.to_csv(csv_file, index=False)
