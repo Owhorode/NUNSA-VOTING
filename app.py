@@ -74,7 +74,7 @@ if st.button("SUBMIT"):
         else:
             st.warning(f"Hello {first_name}, no Passkey found in the dataset.")
     else:
-        st.error("No matching record found. Please verify your details and try again.")
+        st.error("No matching record found. Please verify your details and try again. You may not be registered, try registering here https://docs.google.com/forms/d/e/1FAIpQLSdriD-bmBB3lkhwvM198t0Fu-SZpK1GRIacqEeC6gUyWFsvZg/viewform?usp=sf_link")
 
 # Check if the email is authorized to download the CSV
 authorized_emails = ["owhorodesuccess95@gmail.com", "nunsacmul22@gmail.com"]
