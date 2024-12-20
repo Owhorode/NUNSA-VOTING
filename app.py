@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import hashlib
-import re
 import os
 from PIL import Image
 
@@ -13,25 +12,6 @@ def generate_password(matric_number, last_name):
     password_length = min(12, len(hex_dig))  # Ensure the password is not longer than 'merge'
     password = hex_dig[:password_length]
     return password
-
-# Function to validate user input
-def validate_input(first_name, middle_name, last_name, matric_number, email):
-    if len(matric_number) != 9:
-        return "Incorrect Matric Number"
-    if len(first_name) < 3:
-        return "Incorrect First Name"
-    if len(middle_name) < 3:
-        return "Incorrect Middle Name"
-    if len(last_name) < 3:
-        return "Incorrect Last Name"
-    return None
-
-# Function to validate level input
-def validate_level(level):
-    # Check if the level matches the pattern (e.g., 100L, 200L, etc.)
-    if re.match(r'^\d{3}L$', level):
-        return None
-    return "Incorrect Input"
 
 # Streamlit app
 st.set_page_config(page_title="NUNSA Voters Registration", page_icon="NUNSA.png")
@@ -58,7 +38,8 @@ if os.path.exists(csv_file):
             lambda row: generate_password(row['Matric_number'], row['Last_Name']), axis=1
         )
 else:
-    df = pd.DataFrame(columns=['Timestamp', 'First_Name', 'Middle_Name', 'Last_Name', 'Matric_number', 'Email_address', 'Level', 'Passkey'])
+    st.error("CSV file not found. Please ensure the file is in the current directory.")
+    st.stop()
 
 # Convert names to uppercase
 df['First_Name'] = df['First_Name'].str.upper()
@@ -70,55 +51,26 @@ first_name = st.text_input("Enter your First Name: ").strip().upper()
 middle_name = st.text_input("Enter your Middle Name: ").strip().upper()
 last_name = st.text_input("Enter your Last Name: ").strip().upper()
 matric_number = st.text_input("Enter your Matric Number: ").strip()
-email = st.text_input("Enter your Email Address: ").strip()
-level = st.text_input("Enter your Level (e.g., 100L, 200L): ").strip()
 
 # Add an "OK" button to submit the form
-if st.button("OK"):
-    # Validate user input
-    validation_error = validate_input(first_name, middle_name, last_name, matric_number, email)
-    if validation_error:
-        st.error(validation_error)
+if st.button("SUBMIT"):
+    # Check if the user exists in the dataset
+    existing_user = df[
+        (df['Last_Name'] == last_name) &
+        (df['Matric_number'] == matric_number)
+    ]
+
+    if not existing_user.empty:
+        # User exists
+        passkey = existing_user.iloc[0]['Passkey']
+        st.success(f"Hello {first_name}, your passkey is: {passkey}.")
     else:
-        level_error = validate_level(level)
-        if level_error:
-            st.error(level_error)
-        else:
-            # Check if the user exists in the dataset
-            existing_user = df[
-                (df['First_Name'] == first_name) &
-                (df['Middle_Name'] == middle_name) &
-                (df['Last_Name'] == last_name) &
-                (df['Matric_number'] == matric_number) &
-                (df['Email_address'] == email) &
-                (df['Level'] == level)
-            ]
-
-            if not existing_user.empty:
-                # User exists
-                passkey = existing_user.iloc[0]['Passkey']
-                st.success(f"Hello {first_name}, you have already registered! Your passkey is: {passkey}.")
-            else:
-                # User is not in the dataset, register them
-                passkey = generate_password(matric_number, last_name)
-                new_entry = {
-                    'Timestamp': pd.Timestamp.now(),
-                    'First_Name': first_name,
-                    'Middle_Name': middle_name,
-                    'Last_Name': last_name,
-                    'Matric_number': matric_number,
-                    'Email_address': email,
-                    'Level': level,  # Add the provided level
-                    'Passkey': passkey
-                }
-                df = pd.concat([df, pd.DataFrame([new_entry])], ignore_index=True)
-                st.markdown(f"Hello {first_name}, you have been registered, your passkey is: <span style='font-size:2em;'>{passkey}</span>.", unsafe_allow_html=True)
-
-# Save the updated data back to the CSV
-df.to_csv(csv_file, index=False)
+        # User is not in the dataset
+        st.error("You did not register for this election. Please send a mail to nunsacmul22@gmail.com.")
 
 # Check if the email is authorized to download the CSV
 authorized_emails = ["owhorodesuccess95@gmail.com", "nunsacmul22@gmail.com"]
+email = st.text_input("Enter your Email Address: ").strip()
 if email in authorized_emails:
     # Download button for the updated CSV
     st.download_button(
