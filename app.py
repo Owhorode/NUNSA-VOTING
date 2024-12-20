@@ -28,23 +28,29 @@ with col2:
     # Title
     st.title("NUNSA VOTERS REGISTRATION")
 
-# Load the existing CSV file and generate passkeys for all existing users
-csv_file = "NUNSA Election Form (Responses).csv"
-if os.path.exists(csv_file):
-    df = pd.read_csv(csv_file)
-    # Generate passkeys for all existing users
-    if 'Passkey' not in df.columns:
-        df['Passkey'] = df.apply(
-            lambda row: generate_password(row['Matric_number'], row['Last_Name']), axis=1
-        )
+# Load the CSV file
+filename = "NUNSA Election Form (Responses).csv"  # Replace with the correct file path
+if os.path.exists(filename):
+    df = pd.read_csv(filename)
+
+    # Strip white spaces and standardize column names
+    df['First_Name'] = df['First_Name'].str.strip().str.upper()
+    df['Middle_Name'] = df['Middle_Name'].str.strip().str.upper()
+    df['Last_Name'] = df['Last_Name'].str.strip().str.upper()
+    df['Matric_number'] = df['Matric_number'].astype(str).str.strip()
+    df['Email_address'] = df['Email_address'].str.strip()
+    df['Level'] = df['Level'].str.strip()
 else:
-    st.error("CSV file not found. Please ensure the file is in the current directory.")
+    st.error("CSV file not found. Make sure it's in the specified directory.")
     st.stop()
 
-# Convert names to uppercase
-df['First_Name'] = df['First_Name'].str.upper()
-df['Middle_Name'] = df['Middle_Name'].str.upper()
-df['Last_Name'] = df['Last_Name'].str.upper()
+# Check if 'Passkey' column exists, create it if not
+if 'Passkey' not in df.columns:
+    df['Passkey'] = df.apply(
+        lambda row: generate_password(row['Matric_number'], row['Last_Name']), axis=1
+    )
+    # Save the updated data back to the CSV to ensure consistency
+    df.to_csv(filename, index=False)
 
 # Prompt user for their details
 first_name = st.text_input("Enter your First Name: ").strip().upper()
@@ -52,24 +58,27 @@ middle_name = st.text_input("Enter your Middle Name: ").strip().upper()
 last_name = st.text_input("Enter your Last Name: ").strip().upper()
 matric_number = st.text_input("Enter your Matric Number: ").strip()
 email = st.text_input("Enter your Email Address: ").strip()
+level = st.text_input("Enter your Level (e.g., 100L, 200L): ").strip()
+
 # Add a "SUBMIT" button to submit the form
 if st.button("SUBMIT"):
-    # Check if the user exists in the dataset
-    existing_user = df[
-        (df['Last_Name'] == last_name) &
-        (df['Matric_number'] == matric_number)
-    ]
+    # Use df.query to check if the user exists in the dataset
+    query_str = f"First_Name == '{first_name}' and Middle_Name == '{middle_name}' and Last_Name == '{last_name}' and Matric_number == '{matric_number}' and Email_address == '{email}' and Level == '{level}'"
+    matching_user = df.query(query_str)
 
-    if not existing_user.empty:
-        # User exists
-        passkey = existing_user.iloc[0]['Passkey']
-        st.success(f"Hello {first_name}, your passkey is: {passkey}.")
+    if not matching_user.empty:
+        # User exists, retrieve the Passkey
+        passkey = matching_user.iloc[0]['Passkey']
+        if pd.notna(passkey):
+            st.success(f"Hello {first_name}, your Passkey is: {passkey}")
+        else:
+            st.warning(f"Hello {first_name}, no Passkey found in the dataset.")
     else:
-        # User is not in the dataset
-        st.error("You did not register for this election. Please send a mail to nunsacmul22@gmail.com.")
+        st.error("No matching record found. Please verify your details and try again.")
 
 # Check if the email is authorized to download the CSV
 authorized_emails = ["owhorodesuccess95@gmail.com", "nunsacmul22@gmail.com"]
+email = st.text_input("Enter your Email Address: ").strip()
 if email in authorized_emails:
     # Download button for the updated CSV
     st.download_button(
