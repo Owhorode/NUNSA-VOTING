@@ -51,7 +51,7 @@ first_name = st.text_input("Enter your First Name: ").strip().upper()
 middle_name = st.text_input("Enter your Middle Name: ").strip().upper()
 last_name = st.text_input("Enter your Last Name: ").strip().upper()
 matric_number = st.text_input("Enter your Matric Number: ").strip()
-
+email = st.text_input("Enter your Email Address: ").strip()
 # Add an "OK" button to submit the form
 if st.button("SUBMIT"):
     # Check if the user exists in the dataset
@@ -70,7 +70,6 @@ if st.button("SUBMIT"):
 
 # Check if the email is authorized to download the CSV
 authorized_emails = ["owhorodesuccess95@gmail.com", "nunsacmul22@gmail.com"]
-email = st.text_input("Enter your Email Address: ").strip()
 if email in authorized_emails:
     # Download button for the updated CSV
     st.download_button(
