@@ -77,13 +77,14 @@ if st.button("SUBMIT"):
         st.error("No matching record found. Please verify your details and try again.")
 
 # Check if the email is authorized to download the CSV
-email_download = st.text_input("Enter your Email Address for CSV Download: ").strip()  # Unique label
 authorized_emails = ["owhorodesuccess95@gmail.com", "nunsacmul22@gmail.com"]
-if email_download in authorized_emails:
-    # Download button for the updated CSV
-    st.download_button(
-        label="Download CSV with Passkeys",
-        data=df.to_csv(index=False).encode('utf-8'),
-        file_name="NUNSA_Election_Form_with_Passkeys.csv",
-        mime='text/csv',
-    )
+if email_registration in authorized_emails:
+    email_download = st.text_input("Enter your Email Address for CSV Download: ").strip()  # Unique label
+    if email_download in authorized_emails:
+        # Download button for the updated CSV
+        st.download_button(
+            label="Download CSV with Passkeys",
+            data=df.to_csv(index=False).encode('utf-8'),
+            file_name="NUNSA_Election_Form_with_Passkeys.csv",
+            mime='text/csv',
+        )
