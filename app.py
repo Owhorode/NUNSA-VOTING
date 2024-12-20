@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import hashlib
 import re
+import os
 from PIL import Image
 
 # Function to generate a deterministic password
@@ -47,20 +48,22 @@ with col2:
     # Title
     st.title("NUNSA VOTERS REGISTRATION")
 
-# Read the CSV file from a GitHub repository
-csv_url = "NUNSA Election Form (Responses).csv"  # Replace with your GitHub URL
-df = pd.read_csv(csv_url)
+# Load the existing CSV file
+csv_file = "NUNSA Election Form (Responses).csv"
+if os.path.exists(csv_file):
+    df = pd.read_csv(csv_file)
+    # Generate passkeys for all existing users
+    if 'Passkey' not in df.columns:
+        df['Passkey'] = df.apply(
+            lambda row: generate_password(row['Matric_number'], row['Last_Name']), axis=1
+        )
+else:
+    df = pd.DataFrame(columns=['Timestamp', 'First_Name', 'Middle_Name', 'Last_Name', 'Matric_number', 'Email_address', 'Level', 'Passkey'])
 
 # Convert names to uppercase
 df['First_Name'] = df['First_Name'].str.upper()
 df['Middle_Name'] = df['Middle_Name'].str.upper()
 df['Last_Name'] = df['Last_Name'].str.upper()
-
-# Check if 'Passkey' column exists, create it if not
-if 'Passkey' not in df.columns:
-    df['Passkey'] = df.apply(
-        lambda row: generate_password(row['Matric_number'], row['Last_Name']), axis=1
-    )
 
 # Initialize the attempt counter
 attempts = 0
@@ -78,56 +81,52 @@ matric_number = st.text_input("Enter your Matric Number: ").strip()
 email = st.text_input("Enter your Email Address: ").strip()
 level = st.text_input("Enter your Level (e.g., 100L, 200L): ").strip()
 
-# Validate user input
-validation_error = validate_input(first_name, middle_name, last_name, matric_number, email)
-if validation_error:
-    st.error(validation_error)
-    st.session_state.attempts += 1
-else:
-    level_error = validate_level(level)
-    if level_error:
-        st.error(level_error)
+# Validate user input only if the fields are not empty
+if first_name and middle_name and last_name and matric_number and email:
+    validation_error = validate_input(first_name, middle_name, last_name, matric_number, email)
+    if validation_error:
+        st.error(validation_error)
         st.session_state.attempts += 1
     else:
-        # Check if the user exists in the dataset
-        existing_user = df[
-            (df['First_Name'] == first_name) &
-            (df['Middle_Name'] == middle_name) &
-            (df['Last_Name'] == last_name) &
-            (df['Matric_number'] == matric_number) &
-            (df['Email_address'] == email)
-        ]
-
-        if not existing_user.empty:
-            # User exists
-            passkey = existing_user.iloc[0]['Passkey']
-            if pd.notna(passkey):  # If a passkey exists
-                st.success(f"Hello {first_name}, you have already registered! Your passkey is: {passkey}.")
-            else:  # If no passkey exists (unlikely but handled here for completeness)
-                passkey = generate_password(matric_number, last_name)
-                df.loc[existing_user.index, 'Passkey'] = passkey
-                st.success(f"Hello {first_name}, your new passkey has been generated: {passkey}.")
+        level_error = validate_level(level)
+        if level_error:
+            st.error(level_error)
+            st.session_state.attempts += 1
         else:
-            # User is not in the dataset, register them
-            passkey = generate_password(matric_number, last_name)
-            new_entry = {
-                'Timestamp': pd.Timestamp.now(),
-                'First_Name': first_name,
-                'Middle_Name': middle_name,
-                'Last_Name': last_name,
-                'Matric_number': matric_number,
-                'Email_address': email,
-                'Level': level,  # Add the provided level
-                'Passkey': passkey
-            }
-            df = pd.concat([df, pd.DataFrame([new_entry])], ignore_index=True)
-            st.markdown(f"Hello {first_name}, you have been registered, your passkey is: <span style='font-size:2em;'>{passkey}</span>.", unsafe_allow_html=True)
+            # Check if the user exists in the dataset
+            existing_user = df[
+                (df['First_Name'] == first_name) &
+                (df['Middle_Name'] == middle_name) &
+                (df['Last_Name'] == last_name) &
+                (df['Matric_number'] == matric_number) &
+                (df['Email_address'] == email)
+            ]
+
+            if not existing_user.empty:
+                # User exists
+                passkey = existing_user.iloc[0]['Passkey']
+                st.success(f"Hello {first_name}, you have already registered! Your passkey is: {passkey}.")
+            else:
+                # User is not in the dataset, register them
+                passkey = generate_password(matric_number, last_name)
+                new_entry = {
+                    'Timestamp': pd.Timestamp.now(),
+                    'First_Name': first_name,
+                    'Middle_Name': middle_name,
+                    'Last_Name': last_name,
+                    'Matric_number': matric_number,
+                    'Email_address': email,
+                    'Level': level,  # Add the provided level
+                    'Passkey': passkey
+                }
+                df = pd.concat([df, pd.DataFrame([new_entry])], ignore_index=True)
+                st.markdown(f"Hello {first_name}, you have been registered, your passkey is: <span style='font-size:2em;'>{passkey}</span>.", unsafe_allow_html=True)
 
 if st.session_state.attempts == max_attempts:
     st.error("You have been blocked, please send a complaint to nunsacmul22@gmail.com")
 
 # Save the updated data back to the CSV
-df.to_csv("NUNSA_Election_Form_with_Passkeys.csv", index=False)
+df.to_csv(csv_file, index=False)
 
 # Check if the email is authorized to download the CSV
 authorized_emails = ["owhorodesuccess95@gmail.com", "nunsacmul22@gmail.com"]
