@@ -52,7 +52,7 @@ middle_name = st.text_input("Enter your Middle Name: ").strip().upper()
 last_name = st.text_input("Enter your Last Name: ").strip().upper()
 matric_number = st.text_input("Enter your Matric Number: ").strip()
 email = st.text_input("Enter your Email Address: ").strip()
-# Add an "OK" button to submit the form
+# Add a "SUBMIT" button to submit the form
 if st.button("SUBMIT"):
     # Check if the user exists in the dataset
     existing_user = df[
