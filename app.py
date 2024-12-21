@@ -61,7 +61,7 @@ first_name = st.text_input("Enter your First Name: ").strip().upper()
 middle_name = st.text_input("Enter your Middle Name: ").strip().upper()
 last_name = st.text_input("Enter your Last Name: ").strip().upper()
 matric_number = st.text_input("Enter your Matric Number: ").strip()
-email_registration = st.text_input("Enter your Email Address for Registration: ").strip()  # Unique label
+email_registration = st.text_input("Enter your Email Address for Registration: ").strip().lower()  # Unique label
 level = st.text_input("Enter your Level (e.g., 100L, 200L): ").strip()
 
 # Add a "SUBMIT" button to submit the form
