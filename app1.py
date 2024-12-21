@@ -27,35 +27,39 @@ with col2:
     # Title
     st.title("NUNSA PASSKEY GENERATOR")
 
-# Upload CSV or Excel file
-uploaded_file = st.file_uploader("Upload your file (CSV or Excel)", type=["csv", "xlsx"])
+# Upload file (CSV or Excel)
+uploaded_file = st.file_uploader("Upload your file (CSV or Excel)", type=["csv", "xlsx", "xls"])
 
 if uploaded_file is not None:
-    # Determine file type and read accordingly
-    if uploaded_file.name.endswith('.csv'):
-        data = pd.read_csv(uploaded_file)
-    elif uploaded_file.name.endswith('.xlsx'):
-        data = pd.read_excel(uploaded_file)
+    try:
+        # Detect file type and load data
+        if uploaded_file.name.endswith('.csv'):
+            data = pd.read_csv(uploaded_file)
+        elif uploaded_file.name.endswith(('.xlsx', '.xls')):
+            data = pd.read_excel(uploaded_file)  # Requires openpyxl for .xlsx files
 
-    # Strip white spaces and standardize column names
-    data['First_Name'] = data['First_Name'].str.strip().str.upper()
-    data['Middle_Name'] = data['Middle_Name'].str.strip().str.upper()
-    data['Last_Name'] = data['Last_Name'].str.strip().str.upper()
-    data['Matric_number'] = data['Matric_number'].astype(str).str.strip()
-    data['Email_address'] = data['Email_address'].str.strip()
-    data['Level'] = data['Level'].str.strip()
+        # Strip white spaces and standardize column names
+        data['First_Name'] = data['First_Name'].str.strip().str.upper()
+        data['Middle_Name'] = data['Middle_Name'].str.strip().str.upper()
+        data['Last_Name'] = data['Last_Name'].str.strip().str.upper()
+        data['Matric_number'] = data['Matric_number'].astype(str).str.strip()
+        data['Email_address'] = data['Email_address'].str.strip()
+        data['Level'] = data['Level'].str.strip()
 
-    # Generate passkeys
-    data['Passkey'] = data.apply(lambda row: generate_password(row['Matric_number'], row['Last_Name']), axis=1)
+        # Generate passkeys
+        data['Passkey'] = data.apply(lambda row: generate_password(row['Matric_number'], row['Last_Name']), axis=1)
 
-    # Display the updated data
-    st.write(data)
+        # Display the updated data
+        st.write(data)
 
-    # Provide a download button for the updated CSV file
-    csv = data.to_csv(index=False).encode('utf-8')
-    st.download_button(
-        label="Download CSV with Passkeys",
-        data=csv,
-        file_name="NUNSA_Election_Form_with_Passkeys.csv",
-        mime='text/csv',
-    )
+        # Provide a download button for the updated file
+        csv = data.to_csv(index=False).encode('utf-8')
+        st.download_button(
+            label="Download CSV with Passkeys",
+            data=csv,
+            file_name="NUNSA_Election_Form_with_Passkeys.csv",
+            mime='text/csv',
+        )
+
+    except Exception as e:
+        st.error(f"An error occurred: {e}")
