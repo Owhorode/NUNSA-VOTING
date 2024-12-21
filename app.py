@@ -28,31 +28,27 @@ filename = "NUNSA_Election_Form_with_Passkeys.csv"  # Replace with the correct f
 if os.path.exists(filename):
     df = pd.read_csv(filename)
 
-    # Strip white spaces and standardize column names to lowercase, keep 'Passkey' as-is
+    # Strip white spaces from all column names
     df.columns = df.columns.str.strip().str.replace(" ", "_").str.lower()
-    if 'passkey' in df.columns:
-        df.rename(columns={'passkey': 'Passkey'}, inplace=True)
 
-    # Standardize values in other columns
-    df['first_name'] = df['first_name'].str.strip().str.upper()
-    df['middle_name'] = df['middle_name'].str.strip().str.upper()
-    df['last_name'] = df['last_name'].str.strip().str.upper()
-    df['matric_number'] = df['matric_number'].astype(str).str.strip()
-    df['email_address'] = df['email_address'].str.strip()
-    df['level'] = df['level'].str.strip()
+    # Standardize values in the relevant columns
+    for column in ['first_name', 'middle_name', 'last_name', 'matric_number', 'email_address', 'level']:
+        if column in df.columns:
+            df[column] = df[column].str.strip()
+
+    # Check if 'Passkey' column exists, create it if not
+    if 'Passkey' not in df.columns:
+        df['Passkey'] = df.apply(lambda row: generate_password(row['matric_number'], row['last_name']), axis=1)
+        df.to_csv(filename, index=False)  # Save updated data
+
 else:
     st.error("CSV file not found. Make sure it's in the specified directory.")
     st.stop()
 
-# Check if 'Passkey' column exists, create it if not
-if 'Passkey' not in df.columns:
-    df['Passkey'] = df.apply(lambda row: generate_password(row['matric_number'], row['last_name']), axis=1)
-    df.to_csv(filename, index=False)  # Save updated data
-
 # Prompt user for their details
-first_name = st.text_input("Enter your First Name: ").strip().upper()
-middle_name = st.text_input("Enter your Middle Name: ").strip().upper()
-last_name = st.text_input("Enter your Last Name: ").strip().upper()
+first_name = st.text_input("Enter your First Name: ").strip()
+middle_name = st.text_input("Enter your Middle Name: ").strip()
+last_name = st.text_input("Enter your Last Name: ").strip()
 matric_number = st.text_input("Enter your Matric Number: ").strip()
 email_registration = st.text_input("Enter your Email Address for Registration: ").strip()  # Unique label
 level = st.text_input("Enter your Level (e.g., 100L, 200L): ").strip()
