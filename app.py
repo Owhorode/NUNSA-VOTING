@@ -36,14 +36,13 @@ if os.path.exists(filename):
     # Strip whitespaces from all column names
     df.columns = df.columns.str.strip()
 
+    # Strip whitespaces from all string-type columns
+    for column in df.select_dtypes(include=['object']).columns:
+        df[column] = df[column].str.strip()
+
     # Ensure 'Passkey' column exists
     if 'passkey' in df.columns:
         df.rename(columns={'passkey': 'Passkey'}, inplace=True)
-
-    # Standardize values in the columns (no case conversion, just strip whitespace)
-    for column in ['first_name', 'middle_name', 'last_name', 'matric_number', 'email_address', 'level']:
-        if column in df.columns:
-            df[column] = df[column].str.strip()  # Only strip whitespace, no other modifications
 
 else:
     st.error("CSV file not found. Make sure it's in the specified directory.")
