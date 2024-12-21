@@ -24,7 +24,7 @@ with col2:
     st.title("NUNSA VOTERS REGISTRATION")
 
 # Load the CSV file
-filename = "NUNSA_Election_Form_with_Passkeys.csv"  # Replace with the correct file path
+filename = "NUNSA Election Form (Responses).csv"  # Replace with the correct file path
 if os.path.exists(filename):
     df = pd.read_csv(filename)
 
