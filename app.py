@@ -10,40 +10,52 @@ def generate_password(matric_number, last_name):
     hash_object = hashlib.sha256(merge.encode())
     hex_dig = hash_object.hexdigest()
     password_length = min(12, len(hex_dig))  # Ensure the password is not longer than 'merge'
-    return hex_dig[:password_length]
+    password = hex_dig[:password_length]
+    return password
 
-# Streamlit app configuration
+# Streamlit app
 st.set_page_config(page_title="NUNSA Voters Registration", page_icon="NUNSA.png")
 
-# Layout with logo and title
+# Create a layout with two columns
 col1, col2 = st.columns([1, 4])
+
 with col1:
+    # Display the NUNSA logo
     image = Image.open("NUNSA.png")  # Replace with the path to your image
     st.image(image, caption='NUNSA', use_container_width=False, width=100)
+
 with col2:
+    # Title
     st.title("NUNSA VOTERS REGISTRATION")
 
 # Load the CSV file
-filename = "NUNSA Election Form (Responses).csv"  # Replace with the correct file path
+filename = "NUNSA_Election_Form_with_Passkeys.csv"  # Replace with the correct file path
 if os.path.exists(filename):
     df = pd.read_csv(filename)
 
-    # Strip white spaces from all column names
-    df.columns = df.columns.str.strip().str.replace(" ", "_").str.lower()
+    # Strip whitespaces from all column names
+    df.columns = df.columns.str.strip()
 
-    # Standardize values in the relevant columns
+    # Ensure 'Passkey' column exists
+    if 'passkey' in df.columns:
+        df.rename(columns={'passkey': 'Passkey'}, inplace=True)
+
+    # Standardize values in the columns (no case conversion, just strip whitespace)
     for column in ['first_name', 'middle_name', 'last_name', 'matric_number', 'email_address', 'level']:
         if column in df.columns:
-            df[column] = df[column].str.strip()
-
-    # Check if 'Passkey' column exists, create it if not
-    if 'Passkey' not in df.columns:
-        df['Passkey'] = df.apply(lambda row: generate_password(row['matric_number'], row['last_name']), axis=1)
-        df.to_csv(filename, index=False)  # Save updated data
+            df[column] = df[column].str.strip()  # Only strip whitespace, no other modifications
 
 else:
     st.error("CSV file not found. Make sure it's in the specified directory.")
     st.stop()
+
+# Check if 'Passkey' column exists, create it if not
+if 'Passkey' not in df.columns:
+    df['Passkey'] = df.apply(
+        lambda row: generate_password(row['matric_number'], row['last_name']), axis=1
+    )
+    # Save the updated data back to the CSV to ensure consistency
+    df.to_csv(filename, index=False)
 
 # Prompt user for their details
 first_name = st.text_input("Enter your First Name: ").strip()
@@ -62,14 +74,17 @@ if st.button("SUBMIT"):
     if not matching_user.empty:
         # User exists, retrieve the Passkey
         passkey = matching_user.iloc[0]['Passkey']
-        st.success(f"Hello {first_name}, your Passkey is: {passkey}")
+        if pd.notna(passkey):
+            st.success(f"Hello {first_name}, your Passkey is: {passkey}")
+        else:
+            st.warning(f"Hello {first_name}, no Passkey found in the dataset.")
     else:
-        st.error("No matching record found. Please verify your details and try again.")
+        st.error("No matching record found. Please verify your details and try again. You may not be registered, try registering here https://docs.google.com/forms/d/e/1FAIpQLSdriD-bmBB3lkhwvM198t0Fu-SZpK1GRIacqEeC6gUyWFsvZg/viewform?usp=sf_link")
 
 # Check if the email is authorized to download the CSV
 authorized_emails = ["owhorodesuccess95@gmail.com", "nunsacmul22@gmail.com"]
 if email_registration in authorized_emails:
-    email_download = st.text_input("Enter your Email Address for CSV Download: ").strip()
+    email_download = st.text_input("Enter your Email Address for CSV Download: ").strip()  # Unique label
     if email_download in authorized_emails:
         # Download button for the updated CSV
         st.download_button(
