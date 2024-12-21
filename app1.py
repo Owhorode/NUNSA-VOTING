@@ -38,38 +38,25 @@ if uploaded_file is not None:
         elif uploaded_file.name.endswith(('.xlsx', '.xls')):
             data = pd.read_excel(uploaded_file)  # Requires openpyxl for .xlsx files
 
-        # Rename columns to match the provided format
-        expected_columns = {
-            "First_Name": "First_Name",
-            "Middle_Name": "Middle_Name",
-            "Last_Name": "Last_Name",
-            "Matric_number": "Matric_number",
-            "Email_address": "Email_address",
-            "Level": "Level"
-        }
-
-        # Standardize column names (remove spaces, make lowercase)
-        data.columns = data.columns.str.strip().str.replace(" ", "_").str.title()
-
-        # Rename to expected columns
-        data = data.rename(columns={col: expected_columns.get(col, col) for col in data.columns})
+        # Standardize column names (remove spaces, make lowercase, and handle other formats)
+        data.columns = data.columns.str.strip().str.replace(" ", "_").str.lower()
 
         # Check for required columns
-        required_columns = list(expected_columns.values())
+        required_columns = ['first_name', 'middle_name', 'last_name', 'matric_number', 'email_address', 'level']
         missing_columns = [col for col in required_columns if col not in data.columns]
         if missing_columns:
             st.error(f"The uploaded file is missing the following required columns: {', '.join(missing_columns)}")
         else:
-            # Strip white spaces and standardize values
-            data['First_Name'] = data['First_Name'].str.strip().str.upper()
-            data['Middle_Name'] = data['Middle_Name'].str.strip().str.upper()
-            data['Last_Name'] = data['Last_Name'].str.strip().str.upper()
-            data['Matric_number'] = data['Matric_number'].astype(str).str.strip()
-            data['Email_address'] = data['Email_address'].str.strip()
-            data['Level'] = data['Level'].str.strip()
+            # Standardize values
+            data['first_name'] = data['first_name'].str.strip().str.upper()
+            data['middle_name'] = data['middle_name'].str.strip().str.upper()
+            data['last_name'] = data['last_name'].str.strip().str.upper()
+            data['matric_number'] = data['matric_number'].astype(str).str.strip()
+            data['email_address'] = data['email_address'].str.strip()
+            data['level'] = data['level'].str.strip()
 
             # Generate passkeys
-            data['Passkey'] = data.apply(lambda row: generate_password(row['Matric_number'], row['Last_Name']), axis=1)
+            data['passkey'] = data.apply(lambda row: generate_password(row['matric_number'], row['last_name']), axis=1)
 
             # Display the updated data
             st.write(data)
