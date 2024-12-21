@@ -34,12 +34,19 @@ if os.path.exists(filename):
     df = pd.read_csv(filename)
 
     # Strip white spaces and standardize column names
-    df['First_Name'] = df['First_Name'].str.strip().str.upper()
-    df['Middle_Name'] = df['Middle_Name'].str.strip().str.upper()
-    df['Last_Name'] = df['Last_Name'].str.strip().str.upper()
-    df['Matric_number'] = df['Matric_number'].astype(str).str.strip()
-    df['Email_address'] = df['Email_address'].str.strip()
-    df['Level'] = df['Level'].str.strip()
+    df.columns = df.columns.str.strip().str.replace(" ", "_").str.lower()
+
+    # Keep "Passkey" column as it is
+    if 'passkey' in df.columns:
+        df.rename(columns={'passkey': 'Passkey'}, inplace=True)
+
+    # Standardize values in other columns
+    df['first_name'] = df['first_name'].str.strip().str.upper()
+    df['middle_name'] = df['middle_name'].str.strip().str.upper()
+    df['last_name'] = df['last_name'].str.strip().str.upper()
+    df['matric_number'] = df['matric_number'].astype(str).str.strip()
+    df['email_address'] = df['email_address'].str.strip()
+    df['level'] = df['level'].str.strip()
 else:
     st.error("CSV file not found. Make sure it's in the specified directory.")
     st.stop()
@@ -47,7 +54,7 @@ else:
 # Check if 'Passkey' column exists, create it if not
 if 'Passkey' not in df.columns:
     df['Passkey'] = df.apply(
-        lambda row: generate_password(row['Matric_number'], row['Last_Name']), axis=1
+        lambda row: generate_password(row['Matric_number'], row['Last_name']), axis=1
     )
     # Save the updated data back to the CSV to ensure consistency
     df.to_csv(filename, index=False)
@@ -63,7 +70,7 @@ level = st.text_input("Enter your Level (e.g., 100L, 200L): ").strip()
 # Add a "SUBMIT" button to submit the form
 if st.button("SUBMIT"):
     # Use df.query to check if the user exists in the dataset
-    query_str = f"First_Name == '{first_name}' and Middle_Name == '{middle_name}' and Last_Name == '{last_name}' and Matric_number == '{matric_number}' and Email_address == '{email_registration}' and Level == '{level}'"
+    query_str = f"first_name == '{first_name}' and middle_name == '{middle_name}' and last_name == '{last_name}' and matric_number == '{matric_number}' and email_address == '{email_registration}' and level == '{level}'"
     matching_user = df.query(query_str)
 
     if not matching_user.empty:
