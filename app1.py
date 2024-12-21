@@ -56,7 +56,7 @@ if uploaded_file is not None:
             data['level'] = data['level'].str.strip()
 
             # Generate passkeys
-            data['passkey'] = data.apply(lambda row: generate_password(row['matric_number'], row['last_name']), axis=1)
+            data['Passkey'] = data.apply(lambda row: generate_password(row['matric_number'], row['last_name']), axis=1)
 
             # Display the updated data
             st.write(data)
