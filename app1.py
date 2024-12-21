@@ -2,46 +2,6 @@ import streamlit as st
 import pandas as pd
 import hashlib
 from PIL import Image
-import requests
-import base64
-
-# GitHub configuration
-GITHUB_REPO = "Owhorode/NUNSA-VOTING"  # Your GitHub repo
-FILE_PATH = "NUNSA_Election_Form_with_Passkeys.csv"  # Path in the GitHub repo
-GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]  # Store your token securely in Streamlit secrets
-
-# Function to upload the file to GitHub
-def upload_to_github(content):
-    # Encode the content in base64
-    encoded_content = base64.b64encode(content).decode("utf-8")
-
-    # GitHub API URL for the file
-    url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{FILE_PATH}"
-    
-    # Get the current file's SHA to replace it
-    response = requests.get(url, headers={"Authorization": f"token {GITHUB_TOKEN}"})
-    if response.status_code == 200:
-        sha = response.json().get("sha")
-    else:
-        sha = None  # File might not exist yet
-
-    # Prepare the data for the upload
-    data = {
-        "message": "Upload updated election form",  # Commit message
-        "content": encoded_content,  # Base64-encoded content
-        "branch": "main",
-    }
-    if sha:
-        data["sha"] = sha  # Add SHA if file exists
-
-    # Make the request to update the file
-    response = requests.put(url, json=data, headers={"Authorization": f"token {GITHUB_TOKEN}"})
-
-    # Return success or error message
-    if response.status_code in [200, 201]:
-        return "File successfully uploaded to GitHub."
-    else:
-        return f"Error uploading file: {response.status_code} - {response.json()}"
 
 # Function to generate a deterministic password
 def generate_password(matric_number, last_name):
@@ -109,11 +69,6 @@ if uploaded_file is not None:
                 file_name="NUNSA Election Form (Responses).csv",
                 mime='text/csv',
             )
-
-            # Upload to GitHub button
-            if st.button("Upload to Voters Registration App"):
-                upload_message = upload_to_github(csv)
-                st.success(upload_message)
 
     except Exception as e:
         st.error(f"An error occurred: {e}")
