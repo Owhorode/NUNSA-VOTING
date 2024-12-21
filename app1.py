@@ -66,7 +66,7 @@ if uploaded_file is not None:
             st.download_button(
                 label="Download CSV with Passkeys",
                 data=csv,
-                file_name="NUNSA_Election_Form_with_Passkeys.csv",
+                file_name="NUNSA Election Form (Responses).csv",
                 mime='text/csv',
             )
 
