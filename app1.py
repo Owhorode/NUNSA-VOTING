@@ -27,12 +27,15 @@ with col2:
     # Title
     st.title("NUNSA PASSKEY GENERATOR")
 
-# Upload CSV file
-uploaded_file = st.file_uploader("Upload your CSV file", type=["csv"])
+# Upload CSV or Excel file
+uploaded_file = st.file_uploader("Upload your file (CSV or Excel)", type=["csv", "xlsx"])
 
 if uploaded_file is not None:
-    # Read the uploaded CSV file
-    data = pd.read_csv(uploaded_file)
+    # Determine file type and read accordingly
+    if uploaded_file.name.endswith('.csv'):
+        data = pd.read_csv(uploaded_file)
+    elif uploaded_file.name.endswith('.xlsx'):
+        data = pd.read_excel(uploaded_file)
 
     # Strip white spaces and standardize column names
     data['First_Name'] = data['First_Name'].str.strip().str.upper()
