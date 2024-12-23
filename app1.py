@@ -52,9 +52,8 @@ if uploaded_file is not None:
             data['middle_name'] = data['middle_name'].str.strip().str.upper()
             data['last_name'] = data['last_name'].str.strip().str.upper()
             data['matric_number'] = data['matric_number'].astype(str).str.strip()
-            data['email_address'] = data['email_address'].str.strip().lower()
+            data['email_address'] = data['email_address'].apply(lambda x: x.lower().strip() if isinstance(x, str) else x)
             data['level'] = data['level'].str.strip()
-
             # Generate passkeys
             data['Passkey'] = data.apply(lambda row: generate_password(row['matric_number'], row['last_name']), axis=1)
 
